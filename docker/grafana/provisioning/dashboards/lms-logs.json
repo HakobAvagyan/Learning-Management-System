@@ -1,0 +1,224 @@
+{
+  "annotations": { "list": [] },
+  "description": "LMS microservices — structured JSON logs from Loki. Filter by service, level, or paste a traceId in the Search box to trace a request end-to-end.",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "loki", "uid": "loki" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 15, "lineWidth": 2, "spanNulls": false }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "ERROR" }, "properties": [ { "id": "color", "value": { "fixedColor": "red",    "mode": "fixed" } } ] },
+          { "matcher": { "id": "byName", "options": "WARN"  }, "properties": [ { "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } } ] },
+          { "matcher": { "id": "byName", "options": "INFO"  }, "properties": [ { "id": "color", "value": { "fixedColor": "green",  "mode": "fixed" } } ] }
+        ]
+      },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "legend":  { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by(level) (rate({app=~\"$app\"} [1m]))",
+          "legendFormat": "{{level}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Log Rate (per minute, by level)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 7 },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum(count_over_time({app=~\"$app\", level=\"ERROR\"} [$__range]))",
+          "legendFormat": "Errors",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "color": { "fixedColor": "red", "mode": "fixed" }, "unit": "short" }
+      },
+      "title": "Errors",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 7 },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum(count_over_time({app=~\"$app\", level=\"WARN\"} [$__range]))",
+          "legendFormat": "Warnings",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "color": { "fixedColor": "orange", "mode": "fixed" }, "unit": "short" }
+      },
+      "title": "Warnings",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 7 },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum(count_over_time({app=~\"$app\", level=\"INFO\"} [$__range]))",
+          "legendFormat": "Info",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "color": { "fixedColor": "green", "mode": "fixed" }, "unit": "short" }
+      },
+      "title": "Info",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 7 },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum(count_over_time({app=~\"$app\"} [$__range]))",
+          "legendFormat": "Total",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "color": { "fixedColor": "blue", "mode": "fixed" }, "unit": "short" }
+      },
+      "title": "Total Logs",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 22, "w": 24, "x": 0, "y": 11 },
+      "id": 6,
+      "options": {
+        "dedupStrategy":    "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": true,
+        "showCommonLabels": false,
+        "showLabels":       true,
+        "showTime":         true,
+        "sortOrder":        "Descending",
+        "wrapLogMessage":   true
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{app=~\"$app\", level=~\"$level\"} | json | line_format \"[{{.level}}] {{.app_name}} — {{.message}}\" |= `$search`",
+          "refId": "A"
+        }
+      ],
+      "title": "Application Logs  (paste traceId in Search to trace a request across all services)",
+      "type": "logs"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["lms", "logs", "loki"],
+  "templating": {
+    "list": [
+      {
+        "current":    {},
+        "datasource": { "type": "loki", "uid": "loki" },
+        "definition": "label_values(app)",
+        "hide":        0,
+        "includeAll":  true,
+        "allValue":    ".*",
+        "label":       "Service",
+        "multi":       true,
+        "name":        "app",
+        "options":     [],
+        "query":       "label_values(app)",
+        "refresh":     2,
+        "regex":       "",
+        "sort":        1,
+        "type":        "query"
+      },
+      {
+        "current": { "selected": true, "text": ".*", "value": ".*" },
+        "hide":    0,
+        "includeAll": false,
+        "label":   "Level",
+        "multi":   false,
+        "name":    "level",
+        "options": [
+          { "selected": true,  "text": ".*",    "value": ".*"    },
+          { "selected": false, "text": "ERROR", "value": "ERROR" },
+          { "selected": false, "text": "WARN",  "value": "WARN"  },
+          { "selected": false, "text": "INFO",  "value": "INFO"  },
+          { "selected": false, "text": "DEBUG", "value": "DEBUG" }
+        ],
+        "query": ".*,ERROR,WARN,INFO,DEBUG",
+        "type":  "custom"
+      },
+      {
+        "current": { "selected": true, "text": "", "value": "" },
+        "hide":    0,
+        "label":   "Search  (traceId / keyword)",
+        "name":    "search",
+        "options": [{ "selected": true, "text": "", "value": "" }],
+        "query":   "",
+        "type":    "textbox"
+      }
+    ]
+  },
+  "time":       { "from": "now-30m", "to": "now" },
+  "timepicker": {},
+  "timezone":   "browser",
+  "title":      "LMS — Application Logs",
+  "uid":        "lms-logs",
+  "version":    1
+}

@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: media-service
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+
+server:
+  port: 8086
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: lms_minio
+  secret-key: lms_minio_secret
+  bucket: lms-media
+  presigned-url-expiry-minutes: 60
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: always
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"

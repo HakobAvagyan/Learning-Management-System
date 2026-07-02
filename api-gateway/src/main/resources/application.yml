@@ -1,0 +1,113 @@
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: user-service-auth
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/auth/**
+        - id: user-service-users
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - name: JwtAuthentication
+
+        - id: course-service-read
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/courses/**
+            - Method=GET
+          filters:
+            - name: JwtAuthentication
+
+        - id: course-service-write
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/courses/**
+            - Method=POST,PUT,DELETE
+          filters:
+            - name: JwtAuthentication
+              args:
+                requiredRoles:
+                  - ROLE_INSTRUCTOR
+                  - ROLE_ADMIN
+
+        - id: enrollment-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/enrollments/**
+          filters:
+            - name: JwtAuthentication
+
+        - id: notification-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - name: JwtAuthentication
+
+        - id: progress-service
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/progress/**
+          filters:
+            - name: JwtAuthentication
+
+        - id: media-service
+          uri: http://localhost:8086
+          predicates:
+            - Path=/api/media/**
+          filters:
+            - name: JwtAuthentication
+
+        - id: assessment-service
+          uri: http://localhost:8087
+          predicates:
+            - Path=/api/assessments/**
+          filters:
+            - name: JwtAuthentication
+
+        - id: quiz-student-service
+          uri: http://localhost:8087
+          predicates:
+            - Path=/api/quizzes/**
+          filters:
+            - name: JwtAuthentication
+
+server:
+  port: 8080
+
+downstream:
+  health-check:
+    interval-ms: 15000
+    services:
+      user-service:        http://localhost:8081
+      course-service:      http://localhost:8082
+      enrollment-service:    http://localhost:8083
+      notification-service:  http://localhost:8084
+      progress-service:      http://localhost:8085
+      media-service:       http://localhost:8086
+      assessment-service:  http://localhost:8087
+
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, gateway
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"

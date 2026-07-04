@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 
 @Getter
@@ -15,6 +16,7 @@ import lombok.Setter;
 @Builder
 public class Option {
 
+    @Field("id")
     private String id;
 
     private String text;

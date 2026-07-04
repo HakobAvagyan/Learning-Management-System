@@ -1,0 +1,26 @@
+spring:
+  kafka:
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+
+  security:
+    enabled: false
+
+management:
+  tracing:
+    sampling:
+      probability: 0.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+
+services:
+  course-service:
+    url: http://localhost:8082
+
+logging:
+  level:
+    com.lms: DEBUG
+    org.apache.kafka: WARN
+    org.springframework.kafka: INFO

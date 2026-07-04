@@ -136,6 +136,7 @@ public class AssessmentService {
             ));
         }
 
+        final int finalEarnedPoints = earnedPoints;
         int percentage = totalPoints > 0 ? (earnedPoints * 100 / totalPoints) : 0;
         boolean passed = percentage >= quiz.getPassingScore();
 
@@ -163,9 +164,20 @@ public class AssessmentService {
                     percentage,
                     Instant.now()
             );
-            kafkaTemplate.send(QUIZ_PASSED_TOPIC, quizId, event);
-            log.info("quiz-passed отправлен: userId={}, courseId={}, lessonId={}, score={}/{}",
-                    userId, quiz.getCourseId(), quiz.getLessonId(), earnedPoints, totalPoints);
+            try {
+                kafkaTemplate.send(QUIZ_PASSED_TOPIC, quizId, event)
+                        .whenComplete((result, ex) -> {
+                            if (ex != null) {
+                                log.error("Не удалось отправить quiz-passed: userId={}, courseId={}, error={}",
+                                        userId, quiz.getCourseId(), ex.getMessage());
+                            } else {
+                                log.info("quiz-passed отправлен: userId={}, courseId={}, lessonId={}, score={}/{}",
+                                        userId, quiz.getCourseId(), quiz.getLessonId(), finalEarnedPoints, totalPoints);
+                            }
+                        });
+            } catch (Exception ex) {
+                log.error("Ошибка при отправке события quiz-passed в Kafka: {}", ex.getMessage());
+            }
         }
 
         return new QuizResultResponse(

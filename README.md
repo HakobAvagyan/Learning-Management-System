@@ -1,6 +1,10 @@
 # Learning Management System (LMS)
 
-Микросервисная система управления обучением на Spring Boot 3 + Angular 17.
+Полноценная платформа онлайн-обучения на основе микросервисной архитектуры.
+Backend — Spring Boot 3.3 / Java 21. Frontend — Angular 17 SPA.
+
+> Подробная документация по каждому сервису — в отдельных README:
+> [api-gateway](./api-gateway/README.md) · [user-service](./user-service/README.md) · [course-service](./course-service/README.md) · [enrollment-service](./enrollment-service/README.md) · [notification-service](./notification-service/README.md) · [progress-service](./progress-service/README.md) · [media-service](./media-service/README.md) · [assessment-service](./assessment-service/README.md) · [lms-ui](./lms-ui/README.md)
 
 ---
 

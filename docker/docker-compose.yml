@@ -20,7 +20,7 @@ services:
       retries: 5
 
   mongodb:
-    image: mongo:latest
+    image: mongo:7.0
     container_name: lms-mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: lms

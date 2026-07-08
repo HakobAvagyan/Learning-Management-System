@@ -166,8 +166,8 @@ services:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 5
-      start_period: 45s
+      retries: 10
+      start_period: 120s
 
   course-service:
     build:
@@ -191,8 +191,8 @@ services:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 5
-      start_period: 45s
+      retries: 10
+      start_period: 120s
 
   enrollment-service:
     build:
@@ -218,8 +218,8 @@ services:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 5
-      start_period: 45s
+      retries: 10
+      start_period: 120s
 
   notification-service:
     build:
@@ -243,8 +243,8 @@ services:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 5
-      start_period: 45s
+      retries: 10
+      start_period: 120s
 
   progress-service:
     build:
@@ -272,8 +272,8 @@ services:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 5
-      start_period: 45s
+      retries: 10
+      start_period: 120s
 
   media-service:
     build:
@@ -297,8 +297,8 @@ services:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8086/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 5
-      start_period: 45s
+      retries: 10
+      start_period: 120s
 
   assessment-service:
     build:
@@ -322,8 +322,8 @@ services:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8087/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 5
-      start_period: 45s
+      retries: 10
+      start_period: 120s
 
   api-gateway:
     build:
@@ -357,8 +357,8 @@ services:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 5
-      start_period: 20s
+      retries: 10
+      start_period: 120s
 
 
   lms-ui:

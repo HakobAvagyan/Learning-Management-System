@@ -18,6 +18,9 @@ public class S3Config {
     @Value("${minio.endpoint}")
     private String endpoint;
 
+    @Value("${minio.public-endpoint:${minio.endpoint}}")
+    private String publicEndpoint;
+
     @Value("${minio.access-key}")
     private String accessKey;
 
@@ -31,14 +34,14 @@ public class S3Config {
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(accessKey, secretKey)))
                 .region(Region.US_EAST_1)
-                .forcePathStyle(true)  
+                .forcePathStyle(true)
                 .build();
     }
 
     @Bean
     public S3Presigner s3Presigner() {
         return S3Presigner.builder()
-                .endpointOverride(URI.create(endpoint))
+                .endpointOverride(URI.create(publicEndpoint))
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(accessKey, secretKey)))
                 .region(Region.US_EAST_1)

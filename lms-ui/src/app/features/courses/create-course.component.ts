@@ -16,6 +16,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../core/services/auth.service';
 import { CourseService } from '../../core/services/course.service';
+import { FileUploadComponent } from '../../shared/components/file-upload/file-upload.component';
 
 @Component({
   selector: 'app-create-course',
@@ -34,6 +35,7 @@ import { CourseService } from '../../core/services/course.service';
     MatSnackBarModule,
     MatTooltipModule,
     MatDividerModule,
+    FileUploadComponent,
   ],
   styles: [`
     .page { max-width: 860px; margin: 32px auto; padding: 0 16px 64px; }
@@ -58,11 +60,14 @@ import { CourseService } from '../../core/services/course.service';
     .module-body { padding: 16px; }
 
     .lesson-row {
-      display: grid; grid-template-columns: 1fr auto 40px; gap: 8px;
-      align-items: center; margin-bottom: 8px;
+      display: grid; grid-template-columns: 1fr auto 40px 40px; gap: 8px;
+      align-items: center; margin-bottom: 4px;
     }
     .lesson-row mat-form-field { margin-bottom: -1.25em; }
     .lesson-duration { width: 100px; }
+
+    .video-upload-zone { margin: 4px 0 12px; padding: 0 4px; }
+    .video-key-label { font-size: 11px; color: #2e7d32; margin-top: 4px; word-break: break-all; }
 
     .add-btn { margin-top: 8px; }
 
@@ -152,23 +157,48 @@ import { CourseService } from '../../core/services/course.service';
             <div class="module-body">
               <!-- Уроки -->
               @for (les of getLessons(mi).controls; track les; let li = $index) {
-                <div class="lesson-row" [formGroup]="asGroup(les)">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Урок {{ li + 1 }}</mat-label>
-                    <input matInput formControlName="title" placeholder="Название урока">
-                    @if (asGroup(les).get('title')?.hasError('required') && asGroup(les).get('title')?.touched) {
-                      <mat-error>Название урока обязательно</mat-error>
-                    }
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="lesson-duration">
-                    <mat-label>Мин.</mat-label>
-                    <input matInput type="number" formControlName="durationMinutes" min="1">
-                  </mat-form-field>
-                  <button mat-icon-button type="button" color="warn"
-                          [disabled]="getLessons(mi).length === 1"
-                          (click)="removeLesson(mi, li)">
-                    <mat-icon>remove_circle_outline</mat-icon>
-                  </button>
+                <div>
+                  <div class="lesson-row" [formGroup]="asGroup(les)">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Урок {{ li + 1 }}</mat-label>
+                      <input matInput formControlName="title" placeholder="Название урока">
+                      @if (asGroup(les).get('title')?.hasError('required') && asGroup(les).get('title')?.touched) {
+                        <mat-error>Название урока обязательно</mat-error>
+                      }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="lesson-duration">
+                      <mat-label>Мин.</mat-label>
+                      <input matInput type="number" formControlName="durationMinutes" min="1">
+                    </mat-form-field>
+                    <button mat-icon-button type="button"
+                            [color]="asGroup(les).get('videoUrl')?.value ? 'accent' : 'primary'"
+                            [matTooltip]="asGroup(les).get('videoUrl')?.value ? 'Видео загружено' : 'Загрузить видео'"
+                            (click)="toggleVideoUpload(mi, li)">
+                      <mat-icon>{{ asGroup(les).get('videoUrl')?.value ? 'videocam' : 'video_call' }}</mat-icon>
+                    </button>
+                    <button mat-icon-button type="button" color="warn"
+                            [disabled]="getLessons(mi).length === 1"
+                            (click)="removeLesson(mi, li)">
+                      <mat-icon>remove_circle_outline</mat-icon>
+                    </button>
+                  </div>
+
+                  @if (videoUploadOpen(mi, li)) {
+                    <div class="video-upload-zone">
+                      <app-file-upload
+                        label="Загрузить видео урока"
+                        accept="video/*"
+                        (uploaded)="onVideoUploaded(mi, li, $event)"
+                        (removed)="onVideoRemoved(mi, li)"
+                      />
+                      @if (asGroup(les).get('videoUrl')?.value) {
+                        <div class="video-key-label">
+                          <mat-icon style="font-size:13px;vertical-align:middle;color:#2e7d32;">check_circle</mat-icon>
+                          {{ asGroup(les).get('videoUrl')?.value }}
+                        </div>
+                      }
+                    </div>
+                  }
                 </div>
               }
 
@@ -212,6 +242,30 @@ export class CreateCourseComponent {
 
   readonly saving = signal(false);
 
+  /** Set of 'mi-li' keys for open video upload panels */
+  private readonly openVideoUploads = signal<Set<string>>(new Set());
+
+  videoUploadOpen(mi: number, li: number): boolean {
+    return this.openVideoUploads().has(`${mi}-${li}`);
+  }
+
+  toggleVideoUpload(mi: number, li: number): void {
+    this.openVideoUploads.update(s => {
+      const next = new Set(s);
+      const key = `${mi}-${li}`;
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
+
+  onVideoUploaded(mi: number, li: number, key: string): void {
+    this.getLessons(mi).at(li).patchValue({ videoUrl: key });
+  }
+
+  onVideoRemoved(mi: number, li: number): void {
+    this.getLessons(mi).at(li).patchValue({ videoUrl: null });
+  }
+
   form = this.fb.group({
     title:       ['', Validators.required],
     description: [''],
@@ -239,6 +293,7 @@ export class CreateCourseComponent {
     return this.fb.group({
       title:           ['', Validators.required],
       durationMinutes: [null as number | null],
+      videoUrl:        [null as string | null],
     });
   }
 
@@ -265,6 +320,7 @@ export class CreateCourseComponent {
         lessons: (m.lessons ?? []).map((l: any, li: number) => ({
           title:           l.title,
           durationMinutes: l.durationMinutes ?? undefined,
+          videoUrl:        l.videoUrl ?? undefined,
           order:           li + 1,
         })),
       })),

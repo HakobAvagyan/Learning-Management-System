@@ -11,6 +11,7 @@ server:
 
 minio:
   endpoint: http://localhost:9000
+  public-endpoint: http://localhost:9000
   access-key: lms_minio
   secret-key: lms_minio_secret
   bucket: lms-media

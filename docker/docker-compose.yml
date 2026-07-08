@@ -153,6 +153,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: lms_secret
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
     ports:
       - "8081:8081"
     depends_on:
@@ -178,6 +179,7 @@ services:
       SPRING_DATA_MONGODB_URI: mongodb://lms:lms_secret@mongodb:27017/lms_courses?authSource=admin
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
     ports:
       - "8082:8082"
     depends_on:
@@ -205,6 +207,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: lms_secret
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
     ports:
       - "8083:8083"
     depends_on:
@@ -230,6 +233,7 @@ services:
       SPRING_DATA_MONGODB_URI: mongodb://lms:lms_secret@mongodb:27017/lms_notifications?authSource=admin
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
     ports:
       - "8084:8084"
     depends_on:
@@ -255,6 +259,7 @@ services:
       SPRING_DATA_MONGODB_URI: mongodb://lms:lms_secret@mongodb:27017/lms_progress?authSource=admin
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
       SPRING_APPLICATION_JSON: >-
         {"services":{"course-service":{"url":"http://course-service:8082"}}}
     ports:
@@ -286,6 +291,7 @@ services:
       MINIO_SECRET_KEY: lms_minio_secret
       MINIO_BUCKET: lms-media
       MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
     ports:
       - "8086:8086"
     depends_on:
@@ -309,6 +315,7 @@ services:
       SPRING_DATA_MONGODB_URI: mongodb://lms:lms_secret@mongodb:27017/lms_assessments?authSource=admin
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
     ports:
       - "8087:8087"
     depends_on:
@@ -332,6 +339,7 @@ services:
     container_name: lms-api-gateway
     environment:
       SPRING_CONFIG_IMPORT: "file:/app/docker-application.yml"
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
     volumes:
       - ../api-gateway/docker-application.yml:/app/docker-application.yml:ro
     ports:

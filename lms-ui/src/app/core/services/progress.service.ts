@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+﻿import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
@@ -10,7 +10,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class ProgressService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:8080/api/progress';
+  private readonly baseUrl = '/api/progress';
 
   getProgress(userId: number, courseId: string): Observable<ProgressResponse> {
     return this.http.get<ProgressResponse>(

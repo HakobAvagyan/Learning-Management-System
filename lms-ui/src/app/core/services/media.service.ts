@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+﻿import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpEvent, HttpRequest } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -19,7 +19,7 @@ export interface PresignedUrlResponse {
 @Injectable({ providedIn: 'root' })
 export class MediaService {
   private readonly http = inject(HttpClient);
-  private readonly base = 'http://localhost:8080/api/media';
+  private readonly base = '/api/media';
 
   upload(file: File): Observable<HttpEvent<UploadResponse>> {
     const formData = new FormData();

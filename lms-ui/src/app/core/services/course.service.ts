@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+﻿import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CourseDto, CoursePage } from '../models/course.model';
@@ -6,7 +6,7 @@ import { CourseDto, CoursePage } from '../models/course.model';
 @Injectable({ providedIn: 'root' })
 export class CourseService {
   private readonly http = inject(HttpClient);
-  private readonly base = 'http://localhost:8080/api/courses';
+  private readonly base = '/api/courses';
 
   getAll(page = 0, size = 20): Observable<CoursePage> {
     const params = new HttpParams().set('page', page).set('size', size).set('status', 'PUBLISHED');

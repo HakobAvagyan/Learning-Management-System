@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+﻿import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -35,7 +35,7 @@ export interface ChangePasswordRequest {
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly http = inject(HttpClient);
-  private readonly base = 'http://localhost:8080/api/users';
+  private readonly base = '/api/users';
 
   getMe(): Observable<UserProfile> {
     return this.http.get<UserProfile>(`${this.base}/me`);

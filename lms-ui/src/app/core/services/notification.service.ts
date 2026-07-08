@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+﻿import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { interval } from 'rxjs';
 import { startWith, switchMap } from 'rxjs/operators';
@@ -10,7 +10,7 @@ import { AuthService } from './auth.service';
 export class NotificationService {
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
-  private readonly base = 'http://localhost:8080/api/notifications';
+  private readonly base = '/api/notifications';
 
   readonly notifications = signal<AppNotification[]>([]);
   readonly unreadCount   = signal(0);

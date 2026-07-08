@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+﻿import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -37,8 +37,8 @@ export interface QuizRequest {
 @Injectable({ providedIn: 'root' })
 export class AssessmentService {
   private readonly http      = inject(HttpClient);
-  private readonly quizBase  = 'http://localhost:8080/api/quizzes';
-  private readonly adminBase = 'http://localhost:8080/api/assessments';
+  private readonly quizBase  = '/api/quizzes';
+  private readonly adminBase = '/api/assessments';
 
   getQuiz(quizId: string): Observable<QuizDto> {
     return this.http.get<QuizDto>(`${this.quizBase}/${quizId}`);

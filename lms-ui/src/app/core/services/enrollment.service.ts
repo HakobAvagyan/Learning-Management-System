@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+﻿import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -18,7 +18,7 @@ export interface EnrollmentResponse {
 @Injectable({ providedIn: 'root' })
 export class EnrollmentService {
   private readonly http = inject(HttpClient);
-  private readonly base = 'http://localhost:8080/api/enrollments';
+  private readonly base = '/api/enrollments';
 
   subscribe(req: SubscribeRequest): Observable<EnrollmentResponse> {
     return this.http.post<EnrollmentResponse>(`${this.base}/subscribe`, req);

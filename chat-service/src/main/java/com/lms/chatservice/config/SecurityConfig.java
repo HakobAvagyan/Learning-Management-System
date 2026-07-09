@@ -54,20 +54,31 @@ public class SecurityConfig {
                                             @NonNull FilterChain chain)
                     throws ServletException, IOException {
 
-                String header = request.getHeader("Authorization");
-                if (header != null && header.startsWith("Bearer ")) {
-                    String token = header.substring(7);
-                    try {
-                        Long userId = jwtService.extractUserId(token);
-                        if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                            var auth = new UsernamePasswordAuthenticationToken(
-                                    userId.toString(),
-                                    null,
-                                    List.of(new SimpleGrantedAuthority("ROLE_USER"))
-                            );
-                            SecurityContextHolder.getContext().setAuthentication(auth);
-                        }
-                    } catch (Exception ignored) {}
+                // Try gateway-injected header first (X-User-Id), fall back to JWT
+                String userId = request.getHeader("X-User-Id");
+                if (userId != null && !userId.isBlank()) {
+                    var auth = new UsernamePasswordAuthenticationToken(
+                            userId,
+                            null,
+                            List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                } else {
+                    String header = request.getHeader("Authorization");
+                    if (header != null && header.startsWith("Bearer ")) {
+                        String token = header.substring(7);
+                        try {
+                            Long uid = jwtService.extractUserId(token);
+                            if (uid != null) {
+                                var auth = new UsernamePasswordAuthenticationToken(
+                                        uid.toString(),
+                                        null,
+                                        List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                                );
+                                SecurityContextHolder.getContext().setAuthentication(auth);
+                            }
+                        } catch (Exception ignored) {}
+                    }
                 }
                 chain.doFilter(request, response);
             }

@@ -25,7 +25,7 @@ export class ChatService {
 
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
     this.client = new Client({
-      brokerURL: `${proto}://${location.host}/ws-chat/websocket`,
+      brokerURL: `${proto}://${location.host}/ws-chat`,
       connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
 

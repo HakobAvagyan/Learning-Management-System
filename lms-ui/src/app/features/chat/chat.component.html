@@ -47,9 +47,8 @@
       <div class="chat-input">
         <textarea
           class="chat-input__field"
-          [(ngModel)]="newText"
-          (ngModelChange)="newText.set($event)"
           [ngModel]="newText()"
+          (ngModelChange)="newText.set($event)"
           (keydown)="onKeydown($event)"
           placeholder="Написать сообщение... (Enter — отправить)"
           rows="1"

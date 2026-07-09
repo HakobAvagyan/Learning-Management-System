@@ -83,7 +83,7 @@ spring:
             - name: JwtAuthentication
 
         - id: chat-service-ws
-          uri: http://chat-service:8088
+          uri: ws://chat-service:8088
           predicates:
             - Path=/ws-chat,/ws-chat/**
 

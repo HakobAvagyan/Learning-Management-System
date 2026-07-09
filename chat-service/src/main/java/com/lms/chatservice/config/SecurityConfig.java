@@ -36,7 +36,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/ws-chat/**").permitAll()   // WebSocket handshake
+                        .requestMatchers("/ws-chat", "/ws-chat/**").permitAll()   // WebSocket handshake
                         .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated()
                 )

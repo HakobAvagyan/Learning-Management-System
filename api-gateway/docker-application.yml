@@ -75,6 +75,18 @@ spring:
           filters:
             - name: JwtAuthentication
 
+        - id: chat-service-rest
+          uri: http://chat-service:8088
+          predicates:
+            - Path=/api/chat/**
+          filters:
+            - name: JwtAuthentication
+
+        - id: chat-service-ws
+          uri: http://chat-service:8088
+          predicates:
+            - Path=/ws-chat,/ws-chat/**
+
 downstream:
   health-check:
     interval-ms: 15000
@@ -86,6 +98,7 @@ downstream:
       progress-service:     http://progress-service:8085
       media-service:        http://media-service:8086
       assessment-service:   http://assessment-service:8087
+      chat-service:         http://chat-service:8088
 
 management:
   zipkin:

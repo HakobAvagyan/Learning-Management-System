@@ -54,47 +54,37 @@ jobs:
     needs: build-and-push
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Prepare deploy bundle
-        run: |
-          mkdir -p lms/loki
-          mkdir -p lms/grafana/provisioning/datasources
-          mkdir -p lms/grafana/provisioning/dashboards
-          mkdir -p lms/api-gateway
-          cp docker/docker-compose.prod.yml   lms/docker-compose.yml
-          cp docker/loki/loki-config.yaml     lms/loki/
-          cp docker/grafana/provisioning/datasources/loki.yaml \
-             lms/grafana/provisioning/datasources/
-          cp docker/grafana/provisioning/dashboards/dashboards.yaml \
-             lms/grafana/provisioning/dashboards/
-          cp docker/grafana/provisioning/dashboards/lms-logs.json \
-             lms/grafana/provisioning/dashboards/
-          cp api-gateway/docker-application.yml lms/api-gateway/
-
-      - name: Upload config files to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "lms"
-          target: "/opt"
-          overwrite: true
-
-      - name: Pull new images & restart
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          envs: DOCKERHUB_USERNAME
+          command_timeout: 20m
           script: |
-            cd /opt/lms
-            export DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME
+            set -e
+            REPO="https://raw.githubusercontent.com/HakobAvagyan/Learning-Management-System/master"
+            DEPLOY_DIR="/opt/lms"
+
+            mkdir -p $DEPLOY_DIR/loki
+            mkdir -p $DEPLOY_DIR/grafana/provisioning/datasources
+            mkdir -p $DEPLOY_DIR/grafana/provisioning/dashboards
+            mkdir -p $DEPLOY_DIR/api-gateway
+
+            curl -fsSL "$REPO/docker/docker-compose.prod.yml" -o $DEPLOY_DIR/docker-compose.yml
+            curl -fsSL "$REPO/docker/loki/loki-config.yaml" -o $DEPLOY_DIR/loki/loki-config.yaml
+            curl -fsSL "$REPO/docker/grafana/provisioning/datasources/loki.yaml" \
+                 -o $DEPLOY_DIR/grafana/provisioning/datasources/loki.yaml
+            curl -fsSL "$REPO/docker/grafana/provisioning/dashboards/dashboards.yaml" \
+                 -o $DEPLOY_DIR/grafana/provisioning/dashboards/dashboards.yaml
+            curl -fsSL "$REPO/docker/grafana/provisioning/dashboards/lms-logs.json" \
+                 -o $DEPLOY_DIR/grafana/provisioning/dashboards/lms-logs.json
+            curl -fsSL "$REPO/api-gateway/docker-application.yml" \
+                 -o $DEPLOY_DIR/api-gateway/docker-application.yml
+
+            cd $DEPLOY_DIR
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             docker compose pull
             docker compose up -d --remove-orphans
             docker image prune -f
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+            echo "✓ Deploy complete"

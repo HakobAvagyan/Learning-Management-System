@@ -84,6 +84,10 @@ jobs:
 
             cd $DEPLOY_DIR
             export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+
+            # Stop old containers (from previous build-based deployment)
+            docker ps -a --filter "name=lms-" -q | xargs -r docker rm -f 2>/dev/null || true
+
             docker compose pull
             docker compose up -d --remove-orphans
             docker image prune -f

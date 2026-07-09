@@ -1,7 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Client, IMessage } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 import { Observable } from 'rxjs';
 
 export interface ChatMessagePayload {
@@ -24,8 +23,9 @@ export class ChatService {
   connect(userId: number, token: string): void {
     if (this.client?.active) return;
 
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
     this.client = new Client({
-      webSocketFactory: () => new SockJS('/ws-chat'),
+      brokerURL: `${proto}://${location.host}/ws-chat/websocket`,
       connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
 

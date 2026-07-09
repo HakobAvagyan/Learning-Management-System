@@ -1,0 +1,389 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: lms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lms
+      POSTGRES_PASSWORD: lms_secret
+      POSTGRES_DB: lms_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - lms-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lms -d lms_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:7.0
+    container_name: lms-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: lms
+      MONGO_INITDB_ROOT_PASSWORD: lms_secret
+      MONGO_INITDB_DATABASE: lms_courses
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - lms-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--username", "lms", "--password", "lms_secret", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')", "--quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    hostname: kafka
+    container_name: lms-kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_LISTENERS: PLAINTEXT://kafka:9092,CONTROLLER://kafka:29093,EXTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_HEAP_OPTS: "-Xmx512m -Xms256m"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - lms-net
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:9092 --list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: lms-zipkin
+    restart: unless-stopped
+    ports:
+      - "9411:9411"
+    networks:
+      - lms-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9411/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  minio:
+    image: minio/minio:latest
+    container_name: lms-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: lms_minio
+      MINIO_ROOT_PASSWORD: lms_minio_secret
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - lms-net
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  loki:
+    image: grafana/loki:latest
+    container_name: lms-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki_data:/loki
+    networks:
+      - lms-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: lms-grafana
+    restart: unless-stopped
+    depends_on:
+      loki:
+        condition: service_started
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    networks:
+      - lms-net
+
+
+  user-service:
+    image: ${DOCKERHUB_USERNAME}/lms-user-service:latest
+    container_name: lms-user-service
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lms_db
+      SPRING_DATASOURCE_USERNAME: lms
+      SPRING_DATASOURCE_PASSWORD: lms_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - lms-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 120s
+
+  course-service:
+    image: ${DOCKERHUB_USERNAME}/lms-course-service:latest
+    container_name: lms-course-service
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://lms:lms_secret@mongodb:27017/lms_courses?authSource=admin
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
+    ports:
+      - "8082:8082"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - lms-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 120s
+
+  enrollment-service:
+    image: ${DOCKERHUB_USERNAME}/lms-enrollment-service:latest
+    container_name: lms-enrollment-service
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lms_db
+      SPRING_DATASOURCE_USERNAME: lms
+      SPRING_DATASOURCE_PASSWORD: lms_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - lms-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 120s
+
+  notification-service:
+    image: ${DOCKERHUB_USERNAME}/lms-notification-service:latest
+    container_name: lms-notification-service
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://lms:lms_secret@mongodb:27017/lms_notifications?authSource=admin
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
+    ports:
+      - "8084:8084"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - lms-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 120s
+
+  progress-service:
+    image: ${DOCKERHUB_USERNAME}/lms-progress-service:latest
+    container_name: lms-progress-service
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://lms:lms_secret@mongodb:27017/lms_progress?authSource=admin
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      SPRING_APPLICATION_JSON: >-
+        {"services":{"course-service":{"url":"http://course-service:8082"}}}
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
+    ports:
+      - "8085:8085"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      course-service:
+        condition: service_healthy
+    networks:
+      - lms-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 120s
+
+  media-service:
+    image: ${DOCKERHUB_USERNAME}/lms-media-service:latest
+    container_name: lms-media-service
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_PUBLIC_ENDPOINT: http://167.233.132.212:9000
+      MINIO_ACCESS_KEY: lms_minio
+      MINIO_SECRET_KEY: lms_minio_secret
+      MINIO_BUCKET: lms-media
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
+    ports:
+      - "8086:8086"
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - lms-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8086/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 120s
+
+  assessment-service:
+    image: ${DOCKERHUB_USERNAME}/lms-assessment-service:latest
+    container_name: lms-assessment-service
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://lms:lms_secret@mongodb:27017/lms_assessments?authSource=admin
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
+    ports:
+      - "8087:8087"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - lms-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8087/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 120s
+
+  api-gateway:
+    image: ${DOCKERHUB_USERNAME}/lms-api-gateway:latest
+    container_name: lms-api-gateway
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      SPRING_CONFIG_IMPORT: "file:/app/docker-application.yml"
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m"
+    volumes:
+      - ./api-gateway/docker-application.yml:/app/docker-application.yml:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      user-service:
+        condition: service_healthy
+      course-service:
+        condition: service_healthy
+      enrollment-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+      progress-service:
+        condition: service_healthy
+      media-service:
+        condition: service_healthy
+      assessment-service:
+        condition: service_healthy
+    networks:
+      - lms-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 120s
+
+  lms-ui:
+    image: ${DOCKERHUB_USERNAME}/lms-ui:latest
+    container_name: lms-ui
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "80:80"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - lms-net
+
+
+volumes:
+  postgres_data:
+  mongo_data:
+  kafka_data:
+  minio_data:
+  loki_data:
+  grafana_data:
+
+networks:
+  lms-net:
+    driver: bridge

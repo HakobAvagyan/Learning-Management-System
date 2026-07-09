@@ -1,0 +1,65 @@
+<div class="chat-widget" *ngIf="currentUser()">
+
+  <button class="chat-fab" (click)="toggle()" [class.open]="isOpen()" aria-label="Открыть чат">
+    <span class="chat-fab__icon">{{ isOpen() ? '✕' : '💬' }}</span>
+    @if (chatSvc.unreadCount() > 0 && !isOpen()) {
+      <span class="chat-fab__badge">{{ chatSvc.unreadCount() }}</span>
+    }
+  </button>
+
+  @if (isOpen()) {
+    <div class="chat-window">
+
+      <div class="chat-header">
+        <div class="chat-header__info">
+          <div class="chat-header__avatar">🎓</div>
+          <div>
+            <div class="chat-header__name">Поддержка LMS</div>
+            <div class="chat-header__status" [class.online]="chatSvc.connected()">
+              {{ chatSvc.connected() ? 'онлайн' : 'соединение...' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-messages">
+        @if (loading()) {
+          <div class="chat-messages__loading">Загрузка истории...</div>
+        }
+
+        @for (msg of chatSvc.messages(); track msg.timestamp) {
+          <div class="message" [class.message--mine]="isMine(msg)" [class.message--theirs]="!isMine(msg)">
+            @if (!isMine(msg)) {
+              <div class="message__name">{{ msg.senderName || 'Администратор' }}</div>
+            }
+            <div class="message__bubble">{{ msg.content }}</div>
+            <div class="message__time">{{ msg.timestamp | date:'HH:mm' }}</div>
+          </div>
+        }
+
+        @if (chatSvc.messages().length === 0 && !loading()) {
+          <div class="chat-messages__empty">Напишите нам — мы поможем!</div>
+        }
+
+        <div #scrollAnchor></div>
+      </div>
+
+      <div class="chat-input">
+        <textarea
+          class="chat-input__field"
+          [(ngModel)]="newText"
+          (ngModelChange)="newText.set($event)"
+          [ngModel]="newText()"
+          (keydown)="onKeydown($event)"
+          placeholder="Написать сообщение... (Enter — отправить)"
+          rows="1"
+        ></textarea>
+        <button class="chat-input__send" (click)="send()" [disabled]="!newText().trim()">
+          ➤
+        </button>
+      </div>
+
+    </div>
+  }
+
+</div>

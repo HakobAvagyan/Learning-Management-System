@@ -10,53 +10,89 @@
   @if (isOpen()) {
     <div class="chat-window">
 
-      <div class="chat-header">
-        <div class="chat-header__info">
-          <div class="chat-header__avatar">🎓</div>
-          <div>
-            <div class="chat-header__name">Поддержка LMS</div>
-            <div class="chat-header__status" [class.online]="chatSvc.connected()">
-              {{ chatSvc.connected() ? 'онлайн' : 'соединение...' }}
+      @if (isAdmin() && selectedUserId() === null) {
+        <div class="chat-header">
+          <div class="chat-header__info">
+            <div class="chat-header__avatar">🎓</div>
+            <div>
+              <div class="chat-header__name">Поддержка — диалоги</div>
+              <div class="chat-header__status" [class.online]="chatSvc.connected()">
+                {{ chatSvc.connected() ? 'онлайн' : 'соединение...' }}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="chat-messages">
-        @if (loading()) {
-          <div class="chat-messages__loading">Загрузка истории...</div>
-        }
+        <div class="conversation-list">
+          @if (conversations().length === 0) {
+            <div class="conversation-list__empty">Нет обращений</div>
+          }
+          @for (uid of conversations(); track uid) {
+            <div class="conversation-item" (click)="selectUser(uid)">
+              <span class="conversation-item__avatar">👤</span>
+              <div class="conversation-item__info">
+                <span class="conversation-item__name">Пользователь #{{ uid }}</span>
+              </div>
+              <span class="conversation-item__arrow">›</span>
+            </div>
+          }
+        </div>
+      }
 
-        @for (msg of chatSvc.messages(); track msg.timestamp) {
-          <div class="message" [class.message--mine]="isMine(msg)" [class.message--theirs]="!isMine(msg)">
-            @if (!isMine(msg)) {
-              <div class="message__name">{{ msg.senderName || 'Администратор' }}</div>
+      @if (!isAdmin() || selectedUserId() !== null) {
+        <div class="chat-header">
+          <div class="chat-header__info">
+            @if (isAdmin()) {
+              <button class="chat-header__back" (click)="backToList()" title="Назад">‹</button>
             }
-            <div class="message__bubble">{{ msg.content }}</div>
-            <div class="message__time">{{ msg.timestamp | date:'HH:mm' }}</div>
+            <div class="chat-header__avatar">{{ isAdmin() ? '👤' : '🎓' }}</div>
+            <div>
+              <div class="chat-header__name">
+                {{ isAdmin() ? 'Пользователь #' + selectedUserId() : 'Поддержка LMS' }}
+              </div>
+              <div class="chat-header__status" [class.online]="chatSvc.connected()">
+                {{ chatSvc.connected() ? 'онлайн' : 'соединение...' }}
+              </div>
+            </div>
           </div>
-        }
+        </div>
 
-        @if (chatSvc.messages().length === 0 && !loading()) {
-          <div class="chat-messages__empty">Напишите нам — мы поможем!</div>
-        }
+        <div class="chat-messages">
+          @if (loading()) {
+            <div class="chat-messages__loading">Загрузка истории...</div>
+          }
 
-        <div #scrollAnchor></div>
-      </div>
+          @for (msg of visibleMessages(); track msg.timestamp) {
+            <div class="message" [class.message--mine]="isMine(msg)" [class.message--theirs]="!isMine(msg)">
+              @if (!isMine(msg)) {
+                <div class="message__name">{{ msg.senderName || ('Пользователь #' + msg.senderId) }}</div>
+              }
+              <div class="message__bubble">{{ msg.content }}</div>
+              <div class="message__time">{{ msg.timestamp | date:'HH:mm' }}</div>
+            </div>
+          }
 
-      <div class="chat-input">
-        <textarea
-          class="chat-input__field"
-          [ngModel]="newText()"
-          (ngModelChange)="newText.set($event)"
-          (keydown)="onKeydown($event)"
-          placeholder="Написать сообщение... (Enter — отправить)"
-          rows="1"
-        ></textarea>
-        <button class="chat-input__send" (click)="send()" [disabled]="!newText().trim()">
-          ➤
-        </button>
-      </div>
+          @if (visibleMessages().length === 0 && !loading()) {
+            <div class="chat-messages__empty">Напишите нам — мы поможем!</div>
+          }
+
+          <div #scrollAnchor></div>
+        </div>
+
+        <div class="chat-input">
+          <textarea
+            class="chat-input__field"
+            [ngModel]="newText()"
+            (ngModelChange)="newText.set($event)"
+            (keydown)="onKeydown($event)"
+            placeholder="Написать сообщение... (Enter — отправить)"
+            rows="1"
+          ></textarea>
+          <button class="chat-input__send" (click)="send()" [disabled]="!newText().trim()">
+            ➤
+          </button>
+        </div>
+      }
 
     </div>
   }

@@ -64,6 +64,52 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+.conversation-list {
+  flex: 1;
+  overflow-y: auto;
+  background: #f9fafb;
+
+  &__empty {
+    text-align: center;
+    color: #9ca3af;
+    font-size: 13px;
+    padding: 32px 16px;
+  }
+}
+
+.conversation-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s;
+
+  &:hover { background: #ede9fe; }
+
+  &__avatar {
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+  }
+
+  &__arrow {
+    font-size: 20px;
+    color: #9ca3af;
+  }
+}
+
 .chat-header {
   background: #4f46e5;
   color: #fff;
@@ -74,6 +120,19 @@
     display: flex;
     align-items: center;
     gap: 10px;
+  }
+
+  &__back {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+    opacity: 0.85;
+    flex-shrink: 0;
+    &:hover { opacity: 1; }
   }
 
   &__avatar {

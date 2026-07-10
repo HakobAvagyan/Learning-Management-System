@@ -158,7 +158,8 @@ import { FileUploadComponent } from '../../shared/components/file-upload/file-up
               <!-- Уроки -->
               @for (les of getLessons(mi).controls; track les; let li = $index) {
                 <div>
-                  <div class="lesson-row" [formGroup]="asGroup(les)">
+                  <div [formGroup]="asGroup(les)">
+                  <div class="lesson-row">
                     <mat-form-field appearance="outline">
                       <mat-label>Урок {{ li + 1 }}</mat-label>
                       <input matInput formControlName="title" placeholder="Название урока">
@@ -181,6 +182,13 @@ import { FileUploadComponent } from '../../shared/components/file-upload/file-up
                             (click)="removeLesson(mi, li)">
                       <mat-icon>remove_circle_outline</mat-icon>
                     </button>
+                  </div>
+
+                  <mat-form-field appearance="outline" style="margin-top:4px;">
+                    <mat-label>Текст лекции (описание урока)</mat-label>
+                    <textarea matInput formControlName="content" rows="3"
+                              placeholder="Краткое содержание урока, ключевые тезисы..."></textarea>
+                  </mat-form-field>
                   </div>
 
                   @if (videoUploadOpen(mi, li)) {
@@ -292,6 +300,7 @@ export class CreateCourseComponent {
   makeLesson(): FormGroup {
     return this.fb.group({
       title:           ['', Validators.required],
+      content:         [''],
       durationMinutes: [null as number | null],
       videoUrl:        [null as string | null],
     });
@@ -319,6 +328,7 @@ export class CreateCourseComponent {
         order:  mi + 1,
         lessons: (m.lessons ?? []).map((l: any, li: number) => ({
           title:           l.title,
+          content:         l.content || undefined,
           durationMinutes: l.durationMinutes ?? undefined,
           videoUrl:        l.videoUrl ?? undefined,
           order:           li + 1,

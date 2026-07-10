@@ -1,0 +1,105 @@
+<div class="view-page">
+
+  @if (loading()) {
+    <div class="center">
+      <mat-spinner diameter="52" />
+    </div>
+  } @else {
+
+    <div class="view-header">
+      <button mat-button [routerLink]="['/progress/course', courseId()]">
+        <mat-icon>arrow_back</mat-icon>
+        К прогрессу
+      </button>
+      <div class="view-header__info">
+        <h1 class="view-header__title">{{ courseTitle() }}</h1>
+        <span class="view-header__meta">{{ totalLessons() }} уроков</span>
+      </div>
+    </div>
+
+    <div class="view-layout">
+
+      <aside class="lesson-sidebar">
+        @for (module of modules(); track module.id) {
+          <div class="module-group">
+            <div class="module-group__title">
+              <mat-icon class="module-group__icon">folder_open</mat-icon>
+              {{ module.title }}
+            </div>
+
+            @for (lesson of module.lessons; track lesson.id) {
+              <div
+                class="lesson-item"
+                [class.lesson-item--active]="selectedLesson()?.id === lesson.id"
+                (click)="selectLesson(lesson)"
+                matTooltip="{{ lesson.title }}"
+                matTooltipShowDelay="600"
+              >
+                <mat-icon class="lesson-item__icon">
+                  {{ lesson.videoUrl ? 'play_circle_outline' : 'article' }}
+                </mat-icon>
+                <span class="lesson-item__title">{{ lesson.title }}</span>
+                @if (selectedLesson()?.id === lesson.id) {
+                  <mat-icon class="lesson-item__active-mark">chevron_right</mat-icon>
+                }
+              </div>
+            }
+          </div>
+        }
+      </aside>
+
+      <main class="lesson-viewer">
+
+        @if (selectedLesson(); as lesson) {
+
+          <h2 class="viewer-title">{{ lesson.title }}</h2>
+
+          @if (loadingVideo()) {
+            <div class="video-loading">
+              <mat-spinner diameter="32" />
+              <span>Загрузка видео…</span>
+            </div>
+          } @else if (selectedVideoUrl()) {
+            <div class="video-wrap">
+              <video
+                [src]="selectedVideoUrl()!"
+                controls
+                preload="metadata"
+                class="video-player"
+              >
+                Ваш браузер не поддерживает воспроизведение видео.
+              </video>
+            </div>
+          } @else if (lesson.videoUrl === '') {
+            <div class="video-placeholder">
+              <mat-icon>videocam_off</mat-icon>
+              <span>Видео для этого урока ещё не загружено</span>
+            </div>
+          }
+
+          @if (lesson.description) {
+            <div class="lesson-description">
+              <h3 class="lesson-description__heading">
+                <mat-icon>subject</mat-icon>
+                Описание урока
+              </h3>
+              <p class="lesson-description__text">{{ lesson.description }}</p>
+            </div>
+          }
+
+        } @else {
+
+          <div class="viewer-placeholder">
+            <mat-icon class="viewer-placeholder__icon">play_lesson</mat-icon>
+            <p class="viewer-placeholder__text">Выберите урок из списка слева, чтобы начать просмотр</p>
+          </div>
+
+        }
+
+      </main>
+
+    </div>
+
+  }
+
+</div>

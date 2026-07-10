@@ -4,6 +4,7 @@ export interface LessonDto {
   order: number;
   durationMinutes?: number;
   videoUrl?: string;
+  content?: string;
   attachmentUrls?: string[];
 }
 

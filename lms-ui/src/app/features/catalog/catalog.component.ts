@@ -135,6 +135,12 @@ import { CourseStudentsDialogComponent } from '../courses/course-students-dialog
                     <mat-icon>play_arrow</mat-icon>
                     Продолжить
                   </button>
+                  <button mat-stroked-button color="primary"
+                          [routerLink]="['/courses', course.id, 'view']"
+                          matTooltip="Смотреть материалы курса">
+                    <mat-icon>menu_book</mat-icon>
+                    Материалы
+                  </button>
                 } @else {
                   <button mat-flat-button color="accent"
                           [disabled]="enrolling() === course.id"

@@ -1,7 +1,7 @@
 import {
   Component, OnInit, inject, signal, computed, Pipe, PipeTransform,
 } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterModule } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
@@ -79,8 +79,13 @@ export class ProgressPercentPipe implements PipeTransform {
     .lesson-icon.completed   { color: #2e7d32; }
     .lesson-icon.not-started { color: #bdbdbd; }
 
-    .lesson-title { flex: 1; font-size: 14px; min-width: 0; }
-    .lesson-title.completed { text-decoration: line-through; color: #888; }
+    .lesson-title {
+      flex: 1; font-size: 14px; min-width: 0;
+      cursor: pointer; transition: color 0.15s;
+    }
+    .lesson-title:hover { color: #3f51b5; text-decoration: underline; }
+    .lesson-title.completed { text-decoration: line-through; color: #888; cursor: default; }
+    .lesson-title.completed:hover { color: #888; text-decoration: line-through; }
 
     .complete-btn { white-space: nowrap; }
 
@@ -179,7 +184,12 @@ export class ProgressPercentPipe implements PipeTransform {
                       </mat-icon>
                     </div>
 
-                    <span class="lesson-title" [class.completed]="lesson.status === 'COMPLETED'">
+                    <span
+                      class="lesson-title"
+                      [class.completed]="lesson.status === 'COMPLETED'"
+                      (click)="lesson.status !== 'COMPLETED' && openLesson(lesson.lessonId)"
+                      [title]="lesson.status !== 'COMPLETED' ? 'Открыть материалы урока' : ''"
+                    >
                       {{ lesson.lessonTitle }}
                     </span>
 
@@ -369,6 +379,11 @@ export class CourseProgressComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  openLesson(lessonId: string): void {
+    const courseId = this.progress()?.courseId;
+    if (courseId) this.router.navigate(['/courses', courseId, 'view']);
   }
 
   hasVideo(lessonId: string): boolean {

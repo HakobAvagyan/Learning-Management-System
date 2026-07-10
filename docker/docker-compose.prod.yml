@@ -405,6 +405,22 @@ services:
       - lms-net
 
 
+  mongo-seeder:
+    image: mongo:7.0
+    container_name: lms-mongo-seeder
+    restart: "no"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./seed_all_courses.js:/seed.js:ro
+    command: >
+      mongosh
+      "mongodb://lms:lms_secret@mongodb:27017/lms_courses?authSource=admin"
+      /seed.js
+    networks:
+      - lms-net
+
 volumes:
   postgres_data:
   mongo_data:

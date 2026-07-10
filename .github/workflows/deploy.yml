@@ -81,6 +81,8 @@ jobs:
                  -o $DEPLOY_DIR/grafana/provisioning/dashboards/lms-logs.json
             curl -fsSL "$REPO/api-gateway/docker-application.yml" \
                  -o $DEPLOY_DIR/api-gateway/docker-application.yml
+            curl -fsSL "$REPO/docker/seed_all_courses.js" \
+                 -o $DEPLOY_DIR/seed_all_courses.js
 
             cd $DEPLOY_DIR
             export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}

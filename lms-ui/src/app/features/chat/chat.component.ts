@@ -29,29 +29,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   readonly selectedUserId  = signal<number | null>(null);
   readonly conversations   = signal<ConversationSummary[]>([]);
 
-  constructor() {
-    // Real-time: update unread badges when a new message arrives via WebSocket
-    effect(() => {
-      const incoming = this.chatSvc.lastIncoming();
-      if (!incoming || !this.isAdmin()) return;
-      // Ignore echo of own messages
-      if (incoming.senderId === this.currentUser()?.id) return;
-
-      this.conversations.update(list => {
-        const idx = list.findIndex(c => c.userId === incoming.senderId);
-        // If admin is currently viewing this conversation → don't increment
-        if (this.selectedUserId() === incoming.senderId) return list;
-        if (idx >= 0) {
-          return list.map((c, i) =>
-            i === idx ? { ...c, unreadCount: c.unreadCount + 1 } : c
-          );
-        }
-        // New conversation not yet in list
-        return [...list, { userId: incoming.senderId!, unreadCount: 1 }];
-      });
-    });
-  }
-
   readonly currentUser = computed(() => this.auth.currentUser());
   readonly isAdmin     = computed(() =>
     this.currentUser()?.roles?.includes('ROLE_ADMIN') ?? false
@@ -71,6 +48,26 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       (m.senderId === peer && m.recipientId === me)
     );
   });
+
+  constructor() {
+    // Real-time: update unread badges when a new message arrives via WebSocket
+    effect(() => {
+      const incoming = this.chatSvc.lastIncoming();
+      if (!incoming || !this.isAdmin()) return;
+      if (incoming.senderId === this.currentUser()?.id) return;
+
+      this.conversations.update(list => {
+        const idx = list.findIndex(c => c.userId === incoming.senderId);
+        if (this.selectedUserId() === incoming.senderId) return list;
+        if (idx >= 0) {
+          return list.map((c, i) =>
+            i === idx ? { ...c, unreadCount: c.unreadCount + 1 } : c
+          );
+        }
+        return [...list, { userId: incoming.senderId!, unreadCount: 1 }];
+      });
+    });
+  }
 
   ngOnInit(): void {
     const user = this.currentUser();

@@ -9,7 +9,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -26,10 +25,6 @@ public class DownstreamHealthChecker {
     public boolean isHealthy(String baseUrl) {
         Boolean status = statusCache.get(baseUrl);
         return status == null || status;
-    }
-
-    public Map<String, Boolean> getStatusSnapshot() {
-        return Map.copyOf(statusCache);
     }
 
     @Scheduled(fixedDelayString = "${downstream.health-check.interval-ms:15000}",

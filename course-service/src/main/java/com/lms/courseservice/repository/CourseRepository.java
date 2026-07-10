@@ -11,5 +11,4 @@ public interface CourseRepository extends MongoRepository<Course, String> {
 
     Page<Course> findByInstructorId(String instructorId, Pageable pageable);
 
-    Page<Course> findByCategory(String category, Pageable pageable);
 }

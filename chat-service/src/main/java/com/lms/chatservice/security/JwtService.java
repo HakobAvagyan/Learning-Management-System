@@ -19,19 +19,6 @@ public class JwtService {
         return parseClaims(token).get("userId", Long.class);
     }
 
-    public String extractUsername(String token) {
-        return parseClaims(token).getSubject();
-    }
-
-    public boolean isTokenValid(String token) {
-        try {
-            parseClaims(token);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
     private Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(signingKey())

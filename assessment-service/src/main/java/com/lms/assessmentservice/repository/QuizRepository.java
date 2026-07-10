@@ -15,5 +15,4 @@ public interface QuizRepository extends MongoRepository<Quiz, String> {
 
     List<Quiz> findByLessonId(String lessonId);
 
-    Page<Quiz> findByCreatedBy(String createdBy, Pageable pageable);
 }

@@ -25,18 +25,23 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
             String authHeader = accessor.getFirstNativeHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                try {
-                    Long userId = jwtService.extractUserId(token);
-                    if (userId != null) {
-                        final String principalName = userId.toString();
-                        accessor.setUser(() -> principalName);
-                        log.debug("WebSocket authenticated: userId={}", principalName);
-                    }
-                } catch (Exception e) {
-                    log.warn("WebSocket auth failed: {}", e.getMessage());
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                throw new org.springframework.messaging.MessageDeliveryException("Missing Authorization header");
+            }
+            String token = authHeader.substring(7);
+            try {
+                Long userId = jwtService.extractUserId(token);
+                if (userId == null) {
+                    throw new org.springframework.messaging.MessageDeliveryException("Invalid token: no userId");
                 }
+                final String principalName = userId.toString();
+                accessor.setUser(() -> principalName);
+                log.debug("WebSocket authenticated: userId={}", principalName);
+            } catch (org.springframework.messaging.MessageDeliveryException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("WebSocket auth failed: {}", e.getMessage());
+                throw new org.springframework.messaging.MessageDeliveryException("Auth failed: " + e.getMessage());
             }
         }
         return message;

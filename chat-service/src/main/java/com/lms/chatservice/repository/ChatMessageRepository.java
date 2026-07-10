@@ -22,7 +22,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     @Query("""
             SELECT new com.lms.chatservice.dto.ConversationSummary(
                 CASE WHEN m.senderId = :adminId THEN m.recipientId ELSE m.senderId END,
-                SUM(CASE WHEN m.senderId <> :adminId AND m.isRead = false THEN 1L ELSE 0L END)
+                SUM(CASE WHEN m.senderId <> :adminId AND m.isRead = false THEN 1 ELSE 0 END)
             )
             FROM ChatMessage m
             WHERE m.senderId = :adminId OR m.recipientId = :adminId

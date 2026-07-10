@@ -6,6 +6,10 @@
                             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
     <include file="db/changelog/migrations/001_create_chat_messages.sql"/>
-    <include file="db/changelog/migrations/002_add_is_read.sql"/>
+
+    <changeSet id="2-add-is-read-column" author="chat-service">
+        <sql>ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN NOT NULL DEFAULT FALSE;</sql>
+        <sql>CREATE INDEX IF NOT EXISTS idx_chat_unread ON chat_messages (recipient_id, is_read) WHERE is_read = FALSE;</sql>
+    </changeSet>
 
 </databaseChangeLog>

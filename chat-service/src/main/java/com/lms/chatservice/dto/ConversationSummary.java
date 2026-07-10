@@ -7,5 +7,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class ConversationSummary {
     private Long userId;
-    private long unreadCount;
+    private Long unreadCount;
 }

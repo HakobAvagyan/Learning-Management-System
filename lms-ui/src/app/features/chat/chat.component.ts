@@ -66,7 +66,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         }
         return [...list, { userId: incoming.senderId!, unreadCount: 1 }];
       });
-    });
+    }, { allowSignalWrites: true });
   }
 
   ngOnInit(): void {

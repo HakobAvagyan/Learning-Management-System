@@ -32,7 +32,7 @@ export class ChatService {
       onConnect: () => {
         this.connected.set(true);
 
-        this.client!.subscribe(`/user/${userId}/queue/messages`, (msg: IMessage) => {
+        this.client!.subscribe(`/user/queue/messages`, (msg: IMessage) => {
           const payload: ChatMessagePayload = JSON.parse(msg.body);
           this.messages.update(list => [...list, payload]);
           this.unreadCount.update(n => n + 1);

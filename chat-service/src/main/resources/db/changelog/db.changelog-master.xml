@@ -6,5 +6,6 @@
                             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
     <include file="db/changelog/migrations/001_create_chat_messages.sql"/>
+    <include file="db/changelog/migrations/002_add_is_read.sql"/>
 
 </databaseChangeLog>

@@ -11,11 +11,18 @@ export interface ChatMessagePayload {
   timestamp: string;
 }
 
+export interface ConversationSummary {
+  userId: number;
+  unreadCount: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ChatService {
-  readonly messages   = signal<ChatMessagePayload[]>([]);
-  readonly connected  = signal(false);
-  readonly unreadCount = signal(0);
+  readonly messages     = signal<ChatMessagePayload[]>([]);
+  readonly connected    = signal(false);
+  readonly unreadCount  = signal(0);
+  /** Последнее входящее сообщение — для обновления бейджей в реальном времени */
+  readonly lastIncoming = signal<ChatMessagePayload | null>(null);
 
   private client?: Client;
   private readonly http = inject(HttpClient);
@@ -36,6 +43,7 @@ export class ChatService {
           const payload: ChatMessagePayload = JSON.parse(msg.body);
           this.messages.update(list => [...list, payload]);
           this.unreadCount.update(n => n + 1);
+          this.lastIncoming.set(payload);
         });
       },
 
@@ -58,8 +66,12 @@ export class ChatService {
     return this.http.get<ChatMessagePayload[]>(`/api/chat/history/${recipientId}`);
   }
 
-  loadConversations(): Observable<number[]> {
-    return this.http.get<number[]>('/api/chat/conversations');
+  loadConversations(): Observable<ConversationSummary[]> {
+    return this.http.get<ConversationSummary[]>('/api/chat/conversations');
+  }
+
+  markAsRead(userId: number): Observable<void> {
+    return this.http.post<void>(`/api/chat/read/${userId}`, {});
   }
 
   clearUnread(): void {

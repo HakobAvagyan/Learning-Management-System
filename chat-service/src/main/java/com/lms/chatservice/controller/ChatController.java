@@ -1,8 +1,10 @@
 package com.lms.chatservice.controller;
 
 import com.lms.chatservice.dto.ChatMessagePayload;
+import com.lms.chatservice.dto.ConversationSummary;
 import com.lms.chatservice.entity.ChatMessage;
 import com.lms.chatservice.repository.ChatMessageRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -10,6 +12,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
@@ -68,8 +71,16 @@ public class ChatController {
 
 
     @GetMapping("/api/chat/conversations")
-    public List<Long> conversations(Principal principal) {
+    public List<ConversationSummary> conversations(Principal principal) {
         Long myId = Long.parseLong(principal.getName());
-        return repository.findDistinctConversationPartners(myId);
+        return repository.findConversationsWithUnreadCount(myId);
+    }
+
+    @PostMapping("/api/chat/read/{userId}")
+    @Transactional
+    public void markAsRead(@PathVariable Long userId, Principal principal) {
+        Long adminId = Long.parseLong(principal.getName());
+        repository.markAsRead(userId, adminId);
+        log.debug("Marked messages from {} as read by {}", userId, adminId);
     }
 }

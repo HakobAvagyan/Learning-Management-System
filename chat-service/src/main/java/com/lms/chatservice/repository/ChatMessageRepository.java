@@ -1,7 +1,9 @@
 package com.lms.chatservice.repository;
 
+import com.lms.chatservice.dto.ConversationSummary;
 import com.lms.chatservice.entity.ChatMessage;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -18,10 +20,23 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     List<ChatMessage> findConversation(@Param("a") Long a, @Param("b") Long b);
 
     @Query("""
-            SELECT DISTINCT
-              CASE WHEN m.senderId = :userId THEN m.recipientId ELSE m.senderId END
+            SELECT new com.lms.chatservice.dto.ConversationSummary(
+                CASE WHEN m.senderId = :adminId THEN m.recipientId ELSE m.senderId END,
+                SUM(CASE WHEN m.senderId <> :adminId AND m.isRead = false THEN 1L ELSE 0L END)
+            )
             FROM ChatMessage m
-            WHERE m.senderId = :userId OR m.recipientId = :userId
+            WHERE m.senderId = :adminId OR m.recipientId = :adminId
+            GROUP BY CASE WHEN m.senderId = :adminId THEN m.recipientId ELSE m.senderId END
             """)
-    List<Long> findDistinctConversationPartners(@Param("userId") Long userId);
+    List<ConversationSummary> findConversationsWithUnreadCount(@Param("adminId") Long adminId);
+
+    @Modifying
+    @Query("""
+            UPDATE ChatMessage m
+            SET m.isRead = true
+            WHERE m.senderId = :fromUserId
+              AND m.recipientId = :toAdminId
+              AND m.isRead = false
+            """)
+    void markAsRead(@Param("fromUserId") Long fromUserId, @Param("toAdminId") Long toAdminId);
 }

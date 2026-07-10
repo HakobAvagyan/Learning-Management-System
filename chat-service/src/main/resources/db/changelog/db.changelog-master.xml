@@ -12,4 +12,8 @@
         <sql>CREATE INDEX IF NOT EXISTS idx_chat_unread ON chat_messages (recipient_id, is_read) WHERE is_read = FALSE;</sql>
     </changeSet>
 
+    <changeSet id="3-clear-chat-history" author="chat-service">
+        <sql>TRUNCATE TABLE chat_messages RESTART IDENTITY;</sql>
+    </changeSet>
+
 </databaseChangeLog>
